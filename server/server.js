@@ -1,0 +1,45 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import connectDB from "./db.js";
+import multer from "multer";
+import cloudinary from "./services/cloudinaryService.js";
+
+dotenv.config();
+await connectDB();
+
+const upload = multer({ dest: "uploads/" });
+
+const app = express();
+app.use(cors());
+app.use(express.json()); 
+
+app.get("/", (req, res) => {
+  res.send("Hello from the server!");
+});
+
+app.post("/upload", upload.single("image"), async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "Select an image to upload." });
+  }
+
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    res.json({
+      result,
+      imageUrl: result.secure_url,
+      message: "File received",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use((error, req, res, next) => {
+  console.error("Request failed:", error);
+  res.status(error.status || error.statusCode || 500).json({
+    message: error.message || "Request failed",
+  });
+});
+
+app.listen(5000, () => console.log("Server is running on port 5000"));
