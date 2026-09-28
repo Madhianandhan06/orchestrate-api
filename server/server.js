@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./db.js";
+import Image from "./models/Image.js";
 import multer from "multer";
 import cloudinary from "./services/cloudinaryService.js";
 
@@ -18,6 +19,12 @@ app.get("/", (req, res) => {
   res.send("Hello from the server!");
 });
 
+app.get("/images", async (req, res) => {
+  const images = await Image.find();
+
+  res.json(images);
+});
+
 app.post("/upload", upload.single("image"), async (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ message: "Select an image to upload." });
@@ -25,9 +32,13 @@ app.post("/upload", upload.single("image"), async (req, res, next) => {
 
   try {
     const result = await cloudinary.uploader.upload(req.file.path);
-    res.json({
-      result,
+    const image = await Image.create({
       imageUrl: result.secure_url,
+      publicId: result.public_id,
+    });
+
+    res.json({
+      image,
       message: "File received",
     });
   } catch (error) {
