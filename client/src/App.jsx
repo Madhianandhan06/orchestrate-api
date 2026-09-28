@@ -1,9 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function UploadImage() {
   const [image, setImage] = useState(null);
-  const [uploadedUrl, setUploadedUrl] = useState("");
+  const [images, setImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const getImages = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/images");
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Could not load images.");
+        }
+
+        setImages(data);
+      } catch (error) {
+        setErrorMessage(error.message || "Could not load images.");
+      }
+    };
+
+    getImages();
+  }, []);
 
   const uploadImage = async () => {
     if (!image) {
@@ -26,7 +45,7 @@ export default function UploadImage() {
         throw new Error(data.message || "Image upload failed.");
       }
 
-      setUploadedUrl(data.imageUrl);
+      setImages((currentImages) => [data.image, ...currentImages]);
     } catch (error) {
       setErrorMessage(error.message || "Image upload failed.");
     }
@@ -47,9 +66,9 @@ export default function UploadImage() {
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
 
-      {uploadedUrl && (
-        <img src={uploadedUrl} alt="Uploaded" width="250" />
-      )}
+      {images.map((img) => (
+        <img key={img._id} src={img.imageUrl} alt="Uploaded" width="250" />
+      ))}
     </div>
   );
 }
