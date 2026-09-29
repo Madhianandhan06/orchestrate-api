@@ -5,6 +5,8 @@ export default function UploadImage() {
   const [images, setImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
+  console.log(images);
+  
   useEffect(() => {
     const getImages = async () => {
       try {
@@ -51,6 +53,34 @@ export default function UploadImage() {
     }
   };
 
+  const replaceImage = async (id) => {
+  const formData = new FormData();
+
+  formData.append("image", image);
+
+  const response = await fetch(
+    `http://localhost:5000/images/${id}`,
+    {
+      method: "PUT",
+      body: formData,
+    }
+  );
+
+  const updated = await response.json();
+
+  setImages(images.map((img) =>
+    img._id === id ? updated : img
+  ));
+};
+
+  const deleteImage = async (id) => {
+  await fetch(`http://localhost:5000/images/${id}`, {
+    method: "DELETE",
+  });
+
+  setImages(images.filter((img) => img._id !== id));
+};
+
   return (
     <div className="bg-amber-200">
       <h2>Upload Image</h2>
@@ -67,7 +97,22 @@ export default function UploadImage() {
       {errorMessage && <p role="alert">{errorMessage}</p>}
 
       {images.map((img) => (
-        <img key={img._id} src={img.imageUrl} alt="Uploaded" width="250" />
+
+        <div className="flex" key={img._id}>
+            <img 
+              src={img.imageUrl} 
+              alt="Uploaded" 
+              width="250" 
+            />
+            <button className=" w-12 h-8 bg-red-600 rounded-lg" onClick={() => replaceImage(img._id)}>
+             Change
+            </button>
+            <button className=" w-12 h-8 bg-red-600 rounded-lg" onClick={() => deleteImage(img._id)}>
+              Delete
+            </button>
+        </div>
+
+        
       ))}
     </div>
   );
