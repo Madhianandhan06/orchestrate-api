@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/images", async (req, res) => {
-  const images = await Image.find();
+  const images = await Image.find().sort({ creadetAt: -1 });
 
   res.json(images);
 });
@@ -35,7 +35,7 @@ app.post("/upload", upload.single("image"), async (req, res, next) => {
     const image = await Image.create({
       imageUrl: result.secure_url,
       publicId: result.public_id,
-    });
+    }).create;
 
     res.json({
       image,
