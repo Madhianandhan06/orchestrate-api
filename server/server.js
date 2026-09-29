@@ -46,6 +46,31 @@ app.post("/upload", upload.single("image"), async (req, res, next) => {
   }
 });
 
+app.put("/images/:id", upload.single("image"), async (req, res) => {
+  const image = await Image.findById(req.params.id);
+
+  await cloudinary.uploader.destroy(image.publicId);
+
+  const result = await cloudinary.uploader.upload(req.file.path);
+
+  image.imageUrl = result.secure_url;
+  image.publicId = result.public_id;
+
+  await image.save();
+
+  res.json(image);
+});
+
+app.delete("/images/:id", async (req, res) => {
+  const image = await Image.findById(req.params.id);
+
+  await cloudinary.uploader.destroy(image.publicId);
+
+  await Image.findByIdAndDelete(req.params.id);
+
+  res.json({ message: "Deleted successfully" });
+});
+
 app.use((error, req, res, next) => {
   console.error("Request failed:", error);
   res.status(error.status || error.statusCode || 500).json({
